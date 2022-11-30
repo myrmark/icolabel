@@ -59,6 +59,9 @@ def print_label(serial,sap,sapdb,unitname,concatenateserial,rackserial,user,prin
     subprocess.run(cmd)
     
 
+title = 'Select mode: '
+options = ['Print production label', 'Print project label', 'Register router rack', 'Register filter rack']
+label_mode, index = pick(options, title)
 title = 'Select printer: '
 options = ['TTP-644MT', 'ME340_production', 'Zebra_ZT230_production', 'ME340_lager', 'Zebra_ZT230_lager']
 printer, index = pick(options, title)
@@ -70,5 +73,38 @@ customerid = sqlquery(f"SELECT customerid FROM simdb.custspecificracks WHERE art
 projectid = sqlquery(f"SELECT projectid FROM simdb.custspecificracks WHERE articlenumber='{sap}'")
 
 
+def production_label()
+    typenumber = sqlquery('type',sap)
+    template = sqlquery('template',itemnumber)
+    if labelsize == '101x152mm':
+        template = template+'p'
+    serial = int(input("Enter first serial: "))
+    print(f"--- 2 increments means {serial} and {serial+1} will be printed ---")
+    increments = int(input("How many increments?: "))
+    amount = input("Enter amount of copies to print: ")
+    commands = []
+    for i in range(increments):
+        cmd = "glabels-batch-qt  "\
+                f"/mnt/fs/Icomera/Line/Supply Chain/Production/Glabels/Templates/{template}.glabels  "\
+                f"-D  serial={serial}  "\
+                f"-D  sap={itemnumber}  "\
+                f"-D  type={typenumber}  "\
+                f"-o  /home/{user}/labelfiles/{serial}.pdf".split("  ")
+        commands.append(f"-c /home/{user}/labelfiles/{serial}.pdf")
+        subprocess.call(cmd)
+        serial = serial+1
+    files_strings = " ".join(commands)
+    cmd = f"lp -n {amount} {files_strings} -d {printer} -o media={labelsize}".split()
+    subprocess.call(cmd)
+
+    
 while True:
-  
+    if label_mode == 'Print production label':
+        production_label()
+    elif label_mode == 'Print project label':
+        project_label()
+    elif label_mode == 'Register router rack':
+        router_rack()
+    elif label_mode == 'Register filter rack':
+        filter_rack()
+        
